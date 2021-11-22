@@ -44,13 +44,9 @@ DEFAULT_POSITIONS = [
 
 
 def fix_exception(func):
-    def wrapper(self,
-            *args,
-            **kwargs):
+    def wrapper(self, *args, **kwargs):
         try:
-            return func(self,
-            *args,
-            **kwargs)
+            return func(self, *args, **kwargs)
         except Exception as e:
             self._callbacks.printError("\n\n*** PYTHON EXCEPTION")
             self._callbacks.printError(traceback.format_exc(e))
@@ -116,8 +112,7 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
                 self._menu.add(reset_menu)
                 self._menu.add(clear_menu)
 
-                bar.add(self._menu,
-            bar.getMenuCount())
+                bar.add(self._menu, bar.getMenuCount())
                 bar.repaint()
                 print("Added menu")
 
@@ -149,8 +144,7 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
 
     @fix_exception
     def save_positions(self, event):
-        self._callbacks.saveExtensionSetting(SETTING_ORDER,
-            json.dumps(self._get_current_positions()))
+        self._callbacks.saveExtensionSetting(SETTING_ORDER, json.dumps(self._get_current_positions()))
         swing.JOptionPane.showMessageDialog(None, "Order saved")
         self.load_menu.setEnabled(True)
         print("Saved orders")
