@@ -71,18 +71,24 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
 
         for frame in Frame.getFrames():
             self._find_proxy_history(frame)
+            
         if not self._proxy_history:
             print("ERROR: Unable to locate HTTP History tab")
             return
 
-        history_panel = self._proxy_history.getComponentAt(1).getComponent(1)  # component 0 is the filter
-        scroll_panel = history_panel.getComponent(0)
-        if scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
-            self._history_table = scroll_panel.getComponent(0).getComponent(0)
-        
-        else:
-            print("Unable to locate HTTP History table")
-            return
+        try:
+            history_panel = self._proxy_history.getComponentAt(1).getComponent(1)  # component 0 is the filter
+            scroll_panel = history_panel.getComponent(0)
+            if scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
+                self._history_table = scroll_panel.getComponent(0).getComponent(0)
+            
+            else:
+                print("Unable to locate HTTP History table")
+                return
+        except Exception as e:
+                print("Unable to locate HTTP History table: {}".format(e))
+                return
+
 
         burp_frame = None
         # TODO work with popped out Proxy window
@@ -165,7 +171,7 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
         return False
 
     @fix_exception
-    def reset_positions(self, event):
+    def reset_positions(self, event=None):
         print("Resetting")
         self._set_positions(DEFAULT_POSITIONS)
         pass
