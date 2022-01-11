@@ -9,6 +9,7 @@ __license__ = "GPL"
 __version__ = "1.0.0"
 
 import json
+import time
 import traceback
 
 from burp import IBurpExtender, IExtensionStateListener
@@ -70,7 +71,8 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
         callbacks.setExtensionName(NAME)
 
         for frame in Frame.getFrames():
-            self._find_proxy_history(frame)
+            if frame.isVisible() and frame.getTitle().startswith("Burp Suite"):
+                self._find_proxy_history(frame)
             
         if not self._proxy_history:
             print("ERROR: Unable to locate HTTP History tab")
@@ -78,13 +80,20 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
 
         try:
             history_panel = self._proxy_history.getComponentAt(1).getComponent(1)  # component 0 is the filter
+            count = 1  # we need to make sure the the Burp Proxy has fully loaded
+            while history_panel.getComponent(0).getComponentCount() < 1 and count < 5:
+                print("Waiting for the Proxy to load: {}".format(count))
+                time.sleep(count)
+                count += 1
+
             scroll_panel = history_panel.getComponent(0)
-            if scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
+            if scroll_panel.getComponentCount() and scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
                 self._history_table = scroll_panel.getComponent(0).getComponent(0)
             
             else:
                 print("Unable to locate HTTP History table")
                 return
+
         except Exception as e:
                 print("Unable to locate HTTP History table: {}".format(e))
                 return
