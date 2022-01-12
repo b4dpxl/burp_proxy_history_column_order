@@ -78,26 +78,30 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
             print("ERROR: Unable to locate HTTP History tab")
             return
 
-        try:
-            history_panel = self._proxy_history.getComponentAt(1).getComponent(1)  # component 0 is the filter
-            count = 1  # we need to make sure the the Burp Proxy has fully loaded
-            while history_panel.getComponent(0).getComponentCount() < 1 and count < 5:
-                print("Waiting for the Proxy to load: {}".format(count))
+        time.sleep(1)  # we need to make sure the the Burp Proxy has fully loaded
+        count = 1
+        max_attempts = 5
+        while count <= max_attempts:
+            try:
+                print("Trying to locate HTTP History table, attempt {}".format(count))
                 time.sleep(count)
-                count += 1
+                history_panel = self._proxy_history.getComponentAt(1).getComponent(1)  # component 0 is the filter
+                scroll_panel = history_panel.getComponent(0)
+                print("Possible match: {}".format(scroll_panel.getComponent(0).getComponent(0).getName()))
+                if scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
+                    self._history_table = scroll_panel.getComponent(0).getComponent(0)
+                    print("Got HTTP History table")
+                    break
 
-            scroll_panel = history_panel.getComponent(0)
-            if scroll_panel.getComponentCount() and scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
-                self._history_table = scroll_panel.getComponent(0).getComponent(0)
-            
-            else:
-                print("Unable to locate HTTP History table")
-                return
-
-        except Exception as e:
+            except Exception as e:
                 print("Unable to locate HTTP History table: {}".format(e))
-                return
+                count += 1                
+                if count > max_attempts:
+                    break
 
+        if not self._history_table:
+            print("Unable to locate HTTP History table")
+            return
 
         burp_frame = None
         # TODO work with popped out Proxy window
