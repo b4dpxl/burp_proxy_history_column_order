@@ -83,19 +83,24 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
         max_attempts = 5
         while count <= max_attempts:
             try:
-                print("Trying to locate HTTP History table, attempt {}".format(count))
+                print("Trying to locate history table, attempt {}".format(count))
                 time.sleep(count)
+                count += 1                
+                
                 history_panel = self._proxy_history.getComponentAt(1).getComponent(1)  # component 0 is the filter
-                scroll_panel = history_panel.getComponent(0)
-                print("Possible match: {}".format(scroll_panel.getComponent(0).getComponent(0).getName()))
-                if scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
+                scroll_panel = history_panel.getComponent(0)  # possible position 1 - Customizer seems to move things around
+                if scroll_panel.getComponentCount() == 0:
+                    print("2")
+                    scroll_panel = history_panel.getComponent(1)  # position 2
+                else:
+                    print("1")
+
+                if scroll_panel.getComponent(0).getComponentCount() > 0 and scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
                     self._history_table = scroll_panel.getComponent(0).getComponent(0)
-                    print("Got HTTP History table")
                     break
 
             except Exception as e:
                 print("Unable to locate HTTP History table: {}".format(e))
-                count += 1                
                 if count > max_attempts:
                     break
 
