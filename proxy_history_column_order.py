@@ -63,7 +63,6 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
     _history_table = None
 
     def registerExtenderCallbacks(self, callbacks):
-        # for error handling
 
         self._callbacks = callbacks
         self._helpers = callbacks.getHelpers()
