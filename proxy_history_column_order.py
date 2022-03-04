@@ -3,10 +3,11 @@ Perist the order of columns in the Proxy HTTP History tab
 
 History:
 1.0.0: First version
+1.1.0: Updates for Burp v2022.1.1 UI changes, probably won't work in older versions anymore!!
 """
 __author__ = "b4dpxl"
 __license__ = "GPL"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 import json
 import time
@@ -86,17 +87,25 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
                 time.sleep(count)
                 count += 1                
                 
-                history_panel = self._proxy_history.getComponentAt(1).getComponent(1)  # component 0 is the filter
-                scroll_panel = history_panel.getComponent(0)  # possible position 1 - Customizer seems to move things around
-                if scroll_panel.getComponentCount() == 0:
-                    print("2")
-                    scroll_panel = history_panel.getComponent(1)  # position 2
-                else:
-                    print("1")
+                scroll_panel = self._proxy_history.getComponentAt(1).getComponent(0).getComponent(1)
+                try:
+                    pane = scroll_panel.getComponent(1).getComponent(0).getComponent(0)
+                    if pane.getName() == "proxyHistoryTable":
+                        print("Got proxy history in standard location")
+                        self._history_table = pane
+                        break
+                except:
+                    pass
 
-                if scroll_panel.getComponent(0).getComponentCount() > 0 and scroll_panel.getComponent(0).getComponent(0).getName() == "proxyHistoryTable":
-                    self._history_table = scroll_panel.getComponent(0).getComponent(0)
-                    break
+                # test for if Customizer is used
+                try:
+                    pane = scroll_panel.getComponent(0).getComponent(0).getComponent(0)
+                    if pane.getName() == "proxyHistoryTable":
+                        print("Got proxy history in alternate location")
+                        self._history_table = pane
+                        break
+                except: 
+                    pass
 
             except Exception as e:
                 print("Unable to locate HTTP History table: {}".format(e))
@@ -106,6 +115,7 @@ class BurpExtender(IBurpExtender, IExtensionStateListener):
         if not self._history_table:
             print("Unable to locate HTTP History table")
             return
+
 
         burp_frame = None
         # TODO work with popped out Proxy window
